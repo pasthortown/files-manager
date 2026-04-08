@@ -1,0 +1,118 @@
+<mxfile host="app.diagrams.net" modified="2026-04-08T00:00:00.000Z" agent="Claude Code" version="24.0.0" type="device">
+  <diagram id="arch-diagram" name="Arquitectura del Sistema">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Docker Network Container -->
+        <mxCell id="docker-net" value="Docker Network: app-network (bridge)&#xa;Subnet: 172.16.5.0/24 | Gateway: 172.16.5.1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;verticalAlign=bottom;fontSize=11;dashed=1;dashPattern=5 5;arcSize=6;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="100" y="200" width="1400" height="620" as="geometry" />
+        </mxCell>
+
+        <!-- Usuario -->
+        <mxCell id="user" value="Usuario" style="shape=actor;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="720" y="30" width="60" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Frontend -->
+        <mxCell id="frontend" value="&lt;b&gt;Frontend&lt;/b&gt;&#xa;nginx:alpine&#xa;React 18 + TypeScript + Vite&#xa;&#xa;172.16.5.10:80&#xa;Host :8080" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;verticalAlign=middle;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="650" y="230" width="200" height="110" as="geometry" />
+        </mxCell>
+
+        <!-- Backend -->
+        <mxCell id="backend" value="&lt;b&gt;Backend&lt;/b&gt;&#xa;.NET 8 / ASP.NET Core Web API&#xa;Arquitectura Hexagonal&#xa;&#xa;172.16.5.11:8080&#xa;Host :5000" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=12;verticalAlign=middle;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="650" y="430" width="200" height="120" as="geometry" />
+        </mxCell>
+
+        <!-- SQL Server -->
+        <mxCell id="sqlserver" value="&lt;b&gt;SQL Server 2022&lt;/b&gt;&#xa;FilesManagerDB&#xa;Entity Framework Core&#xa;&#xa;172.16.5.30:1433&#xa;Host :1433" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;verticalAlign=middle;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="200" y="430" width="180" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- Trainer Service -->
+        <mxCell id="trainer" value="&lt;b&gt;Trainer Service&lt;/b&gt;&#xa;Python 3.12 / FastAPI&#xa;Pipeline de procesamiento&#xa;&#xa;172.16.5.42:8000&#xa;Host :8200" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;verticalAlign=middle;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="430" width="200" height="120" as="geometry" />
+        </mxCell>
+
+        <!-- Ollama -->
+        <mxCell id="ollama" value="&lt;b&gt;Ollama&lt;/b&gt;&#xa;Servidor de IA&#xa;LLM + Embeddings&#xa;&#xa;172.16.5.40:11434&#xa;Host :11434" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;verticalAlign=middle;spacingTop=5;" vertex="1" parent="1">
+          <mxGeometry x="960" y="660" width="180" height="120" as="geometry" />
+        </mxCell>
+
+        <!-- ChromaDB -->
+        <mxCell id="chromadb" value="&lt;b&gt;ChromaDB&lt;/b&gt;&#xa;Base de datos vectorial&#xa;1 coleccion por contexto&#xa;&#xa;172.16.5.41:8000&#xa;Host :8100" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;verticalAlign=middle;spacingTop=10;" vertex="1" parent="1">
+          <mxGeometry x="1200" y="655" width="180" height="130" as="geometry" />
+        </mxCell>
+
+        <!-- Modelos Ollama (nota) -->
+        <mxCell id="ollama-models" value="Modelos:&#xa;- gemma3:4b (contexto)&#xa;- nomic-embed-text (embeddings)" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=15;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="750" y="690" width="190" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Capas Backend (nota) -->
+        <mxCell id="backend-layers" value="Capas:&#xa;- FilesManager.API&#xa;- FilesManager.Application&#xa;- FilesManager.Domain&#xa;- FilesManager.Infrastructure" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=15;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;align=left;spacingLeft=8;" vertex="1" parent="1">
+          <mxGeometry x="430" y="450" width="195" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- ====== CONEXIONES ====== -->
+
+        <!-- Usuario -> Frontend -->
+        <mxCell id="conn-user-fe" value="HTTP :8080" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#333333;fontColor=#333333;fontSize=11;fontStyle=1;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="user" target="frontend">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Frontend -> Backend -->
+        <mxCell id="conn-fe-be" value="/api/* (proxy reverso)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#6c8ebf;fontColor=#333333;fontSize=11;fontStyle=0;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="frontend" target="backend">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Backend -> SQL Server -->
+        <mxCell id="conn-be-sql" value="SQL :1433&#xa;Entity Framework" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b85450;fontColor=#333333;fontSize=11;fontStyle=0;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="backend" target="sqlserver">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Backend -> Trainer -->
+        <mxCell id="conn-be-trainer" value="POST /train&#xa;(fire-and-forget)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9673a6;fontColor=#333333;fontSize=11;fontStyle=0;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="backend" target="trainer">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Trainer -> Backend (callback) -->
+        <mxCell id="conn-trainer-be" value="PUT /api/archivos/{id}/procesado&#xa;(callback)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9673a6;fontColor=#333333;fontSize=11;fontStyle=0;dashed=1;dashPattern=8 4;labelBackgroundColor=#FFFFFF;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.75;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="trainer" target="backend">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1100" y="400" />
+              <mxPoint x="800" y="400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Trainer -> Ollama -->
+        <mxCell id="conn-trainer-ollama" value="HTTP :11434&#xa;LLM + Embeddings" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#82b366;fontColor=#333333;fontSize=11;fontStyle=0;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="trainer" target="ollama">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Trainer -> ChromaDB -->
+        <mxCell id="conn-trainer-chroma" value="HTTP :8000&#xa;Almacena vectores" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#82b366;fontColor=#333333;fontSize=11;fontStyle=0;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="trainer" target="chromadb">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Nota Ollama -> Ollama -->
+        <mxCell id="conn-note-ollama" style="edgeStyle=none;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d6b656;dashed=1;dashPattern=3 3;endArrow=none;" edge="1" parent="1" source="ollama-models" target="ollama">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Nota Backend -> Backend -->
+        <mxCell id="conn-note-be" style="edgeStyle=none;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#d6b656;dashed=1;dashPattern=3 3;endArrow=none;" edge="1" parent="1" source="backend-layers" target="backend">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Pipeline steps (nota grande abajo) -->
+        <mxCell id="pipeline" value="&lt;b&gt;Flujo de Aprendizaje:&lt;/b&gt; Usuario selecciona archivos → POST /api/archivos/aprender → Backend marca EnProcesamiento → POST /train al Trainer → Extrae texto → Enriquece via LLM → Chunks → Embeddings → ChromaDB → Callback PUT /procesado → Procesado=true" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=#666666;fillColor=#f5f5f5;fontColor=#333333;fontSize=11;rounded=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="200" y="850" width="1100" height="30" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

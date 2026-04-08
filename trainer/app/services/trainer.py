@@ -1,10 +1,13 @@
 import logging
+import os
 
 import httpx
 
 from app.config import settings
 from app.models import TrainFileRequest
 from app.services import chroma_client, extractor, ollama_client
+
+SKIP_LLM_EXTENSIONS = {".md", ".txt"}
 
 logger = logging.getLogger(__name__)
 
@@ -109,13 +112,19 @@ async def process_file(file: TrainFileRequest) -> None:
             await _callback_backend(file.id, enriched_context)
             return
 
-        # Step 2: Enrich context with LLM
+        # Step 2: Enrich context with LLM (skip for .md/.txt — already processed text)
+        file_ext = os.path.splitext(file.path)[1].lower()
         manual_contexts = parse_manual_contexts(file.contexto)
-        enriched_context = await ollama_client.enrich_context(
-            text,
-            manual_contexts,
-            settings.OLLAMA_MODEL_CONTEXT,
-        )
+
+        if file_ext in SKIP_LLM_EXTENSIONS:
+            logger.info("Skipping LLM enrichment for '%s' (plain text file)", file.nombre)
+            enriched_context = ", ".join(manual_contexts) if manual_contexts else "conocimiento general"
+        else:
+            enriched_context = await ollama_client.enrich_context(
+                text,
+                manual_contexts,
+                settings.OLLAMA_MODEL_CONTEXT,
+            )
 
         # Step 3: Split text into chunks
         chunks = split_text(text, chunk_size=800, overlap=100)
