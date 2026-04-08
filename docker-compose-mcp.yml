@@ -1,0 +1,37 @@
+services:
+  mcp-files:
+    build:
+      context: ./mcp-files
+      dockerfile: Dockerfile
+    container_name: mcp-files
+    ports:
+      - "8300:8000"
+    environment:
+      - BACKEND_URL=http://172.16.5.11:8080
+      - DOWNLOAD_BASE_URL=http://localhost:5000
+    restart: unless-stopped
+    networks:
+      app-network:
+        ipv4_address: 172.16.5.50
+
+  mcp-knowledge:
+    build:
+      context: ./mcp-knowledge
+      dockerfile: Dockerfile
+    container_name: mcp-knowledge
+    ports:
+      - "8301:8000"
+    environment:
+      - OLLAMA_URL=http://172.16.5.40:11434
+      - CHROMA_URL=http://172.16.5.41:8000
+      - OLLAMA_MODEL_CONTEXT=${OLLAMA_MODEL_CONTEXT:-gemma3:4b}
+      - OLLAMA_MODEL_EMBEDDING=${OLLAMA_MODEL_EMBEDDING:-nomic-embed-text}
+    restart: unless-stopped
+    networks:
+      app-network:
+        ipv4_address: 172.16.5.51
+
+networks:
+  app-network:
+    external: true
+    name: app-network

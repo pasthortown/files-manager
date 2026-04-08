@@ -1,0 +1,151 @@
+services:
+  # ===================== APP =====================
+  frontend:
+    image: nginx:alpine
+    container_name: frontend
+    ports:
+      - "8080:80"
+    volumes:
+      - ./html:/usr/share/nginx/html:ro
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      app-network:
+        ipv4_address: 172.16.5.10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend
+    ports:
+      - "5000:8080"
+    volumes:
+      - ./uploaded:/app/uploaded
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=${DB_SERVER},${DB_PORT};Database=${DB_NAME};User Id=${DB_USER};Password=${DB_PASSWORD};TrustServerCertificate=true
+      - FileStorage__BasePath=/app/uploaded
+      - TrainerService__BaseUrl=${TRAINER_URL:-http://172.16.5.42:8000}
+    depends_on:
+      - sqlserver
+    restart: unless-stopped
+    networks:
+      app-network:
+        ipv4_address: 172.16.5.11
+
+  # ===================== DB =====================
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    ports:
+      - "${DB_PORT:-1433}:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${DB_PASSWORD:-SqlServer2024!}
+    volumes:
+      - ./data/sqlserver:/var/opt/mssql
+    restart: unless-stopped
+    networks:
+      app-network:
+        ipv4_address: 172.16.5.30
+
+  # ===================== AI =====================
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ./data/ollama:/root/.ollama
+    restart: unless-stopped
+    networks:
+      app-network:
+        ipv4_address: 172.16.5.40
+
+  chromadb:
+    image: chromadb/chroma
+    container_name: chromadb
+    ports:
+      - "8100:8000"
+    volumes:
+      - ./data/chroma:/chroma/chroma
+    environment:
+      - ANONYMIZED_TELEMETRY=false
+    restart: unless-stopped
+    networks:
+      app-network:
+        ipv4_address: 172.16.5.41
+
+  trainer:
+    build:
+      context: ./trainer
+      dockerfile: Dockerfile
+    container_name: trainer
+    ports:
+      - "8200:8000"
+    volumes:
+      - ./uploaded:/app/uploaded
+    environment:
+      - OLLAMA_URL=http://172.16.5.40:11434
+      - CHROMA_URL=http://172.16.5.41:8000
+      - BACKEND_URL=http://172.16.5.11:8080
+      - OLLAMA_MODEL_CONTEXT=${OLLAMA_MODEL_CONTEXT:-gemma3:4b}
+      - OLLAMA_MODEL_EMBEDDING=${OLLAMA_MODEL_EMBEDDING:-nomic-embed-text}
+    depends_on:
+      - ollama
+      - chromadb
+    restart: unless-stopped
+    networks:
+      app-network:
+        ipv4_address: 172.16.5.42
+
+  # ===================== MCP =====================
+  mcp-files:
+    build:
+      context: ./mcp-files
+      dockerfile: Dockerfile
+    container_name: mcp-files
+    ports:
+      - "8300:8000"
+    environment:
+      - BACKEND_URL=http://172.16.5.11:8080
+      - DOWNLOAD_BASE_URL=http://localhost:5000
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      app-network:
+        ipv4_address: 172.16.5.50
+
+  mcp-knowledge:
+    build:
+      context: ./mcp-knowledge
+      dockerfile: Dockerfile
+    container_name: mcp-knowledge
+    ports:
+      - "8301:8000"
+    environment:
+      - OLLAMA_URL=http://172.16.5.40:11434
+      - CHROMA_URL=http://172.16.5.41:8000
+      - OLLAMA_MODEL_CONTEXT=${OLLAMA_MODEL_CONTEXT:-gemma3:4b}
+      - OLLAMA_MODEL_EMBEDDING=${OLLAMA_MODEL_EMBEDDING:-nomic-embed-text}
+    depends_on:
+      - ollama
+      - chromadb
+    restart: unless-stopped
+    networks:
+      app-network:
+        ipv4_address: 172.16.5.51
+
+networks:
+  app-network:
+    name: app-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.5.0/24
+          gateway: 172.16.5.1

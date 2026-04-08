@@ -1,0 +1,86 @@
+services:
+  sonarqube-quality:
+    image: sonarqube:community
+    container_name: sonarqube-quality
+    ports:
+      - "9000:9000"
+    environment:
+      - SONAR_JDBC_URL=jdbc:postgresql://sonarqube-db-quality:5432/sonarqube
+      - SONAR_JDBC_USERNAME=sonar
+      - SONAR_JDBC_PASSWORD=sonar
+    volumes:
+      - sonarqube_quality_data:/opt/sonarqube/data
+      - sonarqube_quality_extensions:/opt/sonarqube/extensions
+      - sonarqube_quality_logs:/opt/sonarqube/logs
+    depends_on:
+      - sonarqube-db-quality
+    restart: unless-stopped
+    networks:
+      sonar-network:
+        ipv4_address: 172.16.6.10
+
+  sonarqube-db-quality:
+    image: postgres:15
+    container_name: sonarqube-db-quality
+    environment:
+      - POSTGRES_USER=sonar
+      - POSTGRES_PASSWORD=sonar
+      - POSTGRES_DB=sonarqube
+    volumes:
+      - sonarqube_quality_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      sonar-network:
+        ipv4_address: 172.16.6.11
+
+  sonarqube-owasp:
+    image: sonarqube:community
+    container_name: sonarqube-owasp
+    ports:
+      - "9001:9000"
+    environment:
+      - SONAR_JDBC_URL=jdbc:postgresql://sonarqube-db-owasp:5432/sonarqube
+      - SONAR_JDBC_USERNAME=sonar
+      - SONAR_JDBC_PASSWORD=sonar
+    volumes:
+      - sonarqube_owasp_data:/opt/sonarqube/data
+      - sonarqube_owasp_extensions:/opt/sonarqube/extensions
+      - sonarqube_owasp_logs:/opt/sonarqube/logs
+    depends_on:
+      - sonarqube-db-owasp
+    restart: unless-stopped
+    networks:
+      sonar-network:
+        ipv4_address: 172.16.6.12
+
+  sonarqube-db-owasp:
+    image: postgres:15
+    container_name: sonarqube-db-owasp
+    environment:
+      - POSTGRES_USER=sonar
+      - POSTGRES_PASSWORD=sonar
+      - POSTGRES_DB=sonarqube
+    volumes:
+      - sonarqube_owasp_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      sonar-network:
+        ipv4_address: 172.16.6.13
+
+volumes:
+  sonarqube_quality_data:
+  sonarqube_quality_extensions:
+  sonarqube_quality_logs:
+  sonarqube_quality_pgdata:
+  sonarqube_owasp_data:
+  sonarqube_owasp_extensions:
+  sonarqube_owasp_logs:
+  sonarqube_owasp_pgdata:
+
+networks:
+  sonar-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.6.0/24
+          gateway: 172.16.6.1

@@ -1,0 +1,58 @@
+services:
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    restart: unless-stopped
+    networks:
+      app-network:
+        ipv4_address: 172.16.5.40
+
+  chromadb:
+    image: chromadb/chroma
+    container_name: chromadb
+    ports:
+      - "8100:8000"
+    volumes:
+      - chroma-data:/chroma/chroma
+    environment:
+      - ANONYMIZED_TELEMETRY=false
+    restart: unless-stopped
+    networks:
+      app-network:
+        ipv4_address: 172.16.5.41
+
+  trainer:
+    build:
+      context: ./trainer
+      dockerfile: Dockerfile
+    container_name: trainer
+    ports:
+      - "8200:8000"
+    volumes:
+      - ./uploaded:/app/uploaded
+    environment:
+      - OLLAMA_URL=http://172.16.5.40:11434
+      - CHROMA_URL=http://172.16.5.41:8000
+      - BACKEND_URL=http://172.16.5.11:8080
+      - OLLAMA_MODEL_CONTEXT=${OLLAMA_MODEL_CONTEXT:-gemma3:4b}
+      - OLLAMA_MODEL_EMBEDDING=${OLLAMA_MODEL_EMBEDDING:-nomic-embed-text}
+    depends_on:
+      - ollama
+      - chromadb
+    restart: unless-stopped
+    networks:
+      app-network:
+        ipv4_address: 172.16.5.42
+
+volumes:
+  ollama-data:
+  chroma-data:
+
+networks:
+  app-network:
+    external: true
+    name: app-network

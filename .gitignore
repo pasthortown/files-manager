@@ -1,0 +1,40 @@
+# Node
+node_modules/
+dist/
+
+# .NET
+bin/
+obj/
+*.user
+*.suo
+
+# Build artifacts
+html/
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Docker
+docker-volumes/
+data/
+
+# Uploads
+uploaded/
+
+# Test files
+Prueba_descargado.png
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# SonarQube
+.scannerwork/
+.sonarqube/
