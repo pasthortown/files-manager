@@ -116,6 +116,50 @@ def _parse_keywords(raw: str) -> list[str]:
     return keywords
 
 
+async def describe_image(file_path: str, model: str) -> str:
+    """Send an image to a vision-capable model and get a text description."""
+    import base64
+
+    with open(file_path, "rb") as f:
+        img_b64 = base64.b64encode(f.read()).decode()
+
+    prompt = (
+        "Describe esta imagen en detalle en español. "
+        "Incluye todo el texto visible, las personas, objetos, colores, "
+        "composicion y cualquier informacion relevante que puedas extraer. "
+        "Se lo mas completo posible."
+    )
+
+    try:
+        async with httpx.AsyncClient(base_url=settings.OLLAMA_URL, timeout=600.0) as client:
+            resp = await client.post(
+                "/api/generate",
+                json={
+                    "model": model,
+                    "prompt": prompt,
+                    "images": [img_b64],
+                    "stream": False,
+                },
+            )
+            resp.raise_for_status()
+            data = resp.json()
+
+        description = data.get("response", "").strip()
+        if description:
+            logger.info(
+                "Image described successfully (%d chars, model: %s)",
+                len(description), model,
+            )
+            return description
+
+        logger.warning("Vision model returned empty description for %s", file_path)
+        return ""
+
+    except Exception:
+        logger.exception("Error describing image '%s' with model '%s'", file_path, model)
+        return ""
+
+
 async def generate_embedding(text: str, model: str) -> list[float]:
     """Generate an embedding vector for the given text using Ollama."""
     async with httpx.AsyncClient(base_url=settings.OLLAMA_URL, timeout=30.0) as client:

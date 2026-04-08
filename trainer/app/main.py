@@ -23,6 +23,7 @@ async def lifespan(app: FastAPI):
     logger.info("Backend URL: %s", settings.BACKEND_URL)
     logger.info("Context model: %s", settings.OLLAMA_MODEL_CONTEXT)
     logger.info("Embedding model: %s", settings.OLLAMA_MODEL_EMBEDDING)
+    logger.info("Vision model: %s", settings.OLLAMA_MODEL_VISION)
 
     try:
         await ollama_client.ensure_model(settings.OLLAMA_MODEL_CONTEXT)
@@ -33,6 +34,11 @@ async def lifespan(app: FastAPI):
         await ollama_client.ensure_model(settings.OLLAMA_MODEL_EMBEDDING)
     except Exception:
         logger.exception("Failed to ensure embedding model '%s' on startup", settings.OLLAMA_MODEL_EMBEDDING)
+
+    try:
+        await ollama_client.ensure_model(settings.OLLAMA_MODEL_VISION)
+    except Exception:
+        logger.exception("Failed to ensure vision model '%s' on startup", settings.OLLAMA_MODEL_VISION)
 
     logger.info("Trainer service ready")
     yield

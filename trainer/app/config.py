@@ -8,6 +8,7 @@ class Settings:
     UPLOADED_PATH: str = os.getenv("UPLOADED_PATH", "/app/uploaded")
     OLLAMA_MODEL_CONTEXT: str = os.getenv("OLLAMA_MODEL_CONTEXT", "gemma3:4b")
     OLLAMA_MODEL_EMBEDDING: str = os.getenv("OLLAMA_MODEL_EMBEDDING", "nomic-embed-text")
+    OLLAMA_MODEL_VISION: str = os.getenv("OLLAMA_MODEL_VISION", "gemma4:e4b")
 
 
 settings = Settings()

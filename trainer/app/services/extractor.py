@@ -29,6 +29,9 @@ def extract_text(file_path: str) -> str:
             text = _extract_csv(file_path)
         elif ext in (".txt", ".md"):
             text = _extract_plain(file_path)
+        elif ext in (".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"):
+            logger.info("Image file '%s' — skipping text extraction (handled by vision model)", file_path)
+            return ""
         else:
             logger.warning("Unknown extension '%s', attempting plain text read for: %s", ext, file_path)
             text = _extract_plain(file_path)

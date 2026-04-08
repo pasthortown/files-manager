@@ -9,6 +9,7 @@ from app.models import TrainFileRequest
 from app.services import chroma_client, extractor, ollama_client
 
 SKIP_LLM_EXTENSIONS = {".md", ".txt"}
+IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp"}
 
 logger = logging.getLogger(__name__)
 
@@ -102,8 +103,16 @@ async def process_file(file: TrainFileRequest) -> None:
     start_time = datetime.now(timezone.utc)
 
     try:
-        # Step 1: Extract text
-        text = extractor.extract_text(file.path)
+        file_ext = os.path.splitext(file.path)[1].lower()
+        manual_contexts = parse_manual_contexts(file.contexto)
+        is_image = file_ext in IMAGE_EXTENSIONS
+
+        # Step 1: Extract text (or describe image via vision model)
+        if is_image:
+            logger.info("Image file detected, using vision model for '%s'", file.nombre)
+            text = await ollama_client.describe_image(file.path, settings.OLLAMA_MODEL_VISION)
+        else:
+            text = extractor.extract_text(file.path)
 
         if not text or len(text.strip()) < MIN_TEXT_LENGTH:
             logger.warning(
@@ -114,12 +123,9 @@ async def process_file(file: TrainFileRequest) -> None:
             await _callback_backend(file.id, enriched_context, start_time)
             return
 
-        # Step 2: Enrich context with LLM (skip for .md/.txt — already processed text)
-        file_ext = os.path.splitext(file.path)[1].lower()
-        manual_contexts = parse_manual_contexts(file.contexto)
-
-        if file_ext in SKIP_LLM_EXTENSIONS:
-            logger.info("Skipping LLM enrichment for '%s' (plain text file)", file.nombre)
+        # Step 2: Enrich context with LLM (skip for .md/.txt and images)
+        if is_image or file_ext in SKIP_LLM_EXTENSIONS:
+            logger.info("Skipping LLM enrichment for '%s' (%s)", file.nombre, "image" if is_image else "plain text")
             enriched_context = ", ".join(manual_contexts) if manual_contexts else "conocimiento general"
         else:
             enriched_context = await ollama_client.enrich_context(
