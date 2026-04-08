@@ -24,6 +24,8 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
             .ForMember(dest => dest.Procesado, opt => opt.Ignore())
             .ForMember(dest => dest.EnProcesamiento, opt => opt.Ignore())
+            .ForMember(dest => dest.ProcesamientoInicio, opt => opt.Ignore())
+            .ForMember(dest => dest.ProcesamientoFin, opt => opt.Ignore())
             .ForSourceMember(src => src.ArchivoBase64, opt => opt.DoNotValidate())
             .ForSourceMember(src => src.NombreArchivo, opt => opt.DoNotValidate());
     }

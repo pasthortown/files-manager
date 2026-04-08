@@ -54,4 +54,14 @@ public class ArchivoResponse
     /// Indicates whether the file is currently being processed.
     /// </summary>
     public bool EnProcesamiento { get; set; }
+
+    /// <summary>
+    /// Timestamp when the processing started.
+    /// </summary>
+    public DateTime? ProcesamientoInicio { get; set; }
+
+    /// <summary>
+    /// Timestamp when the processing finished.
+    /// </summary>
+    public DateTime? ProcesamientoFin { get; set; }
 }

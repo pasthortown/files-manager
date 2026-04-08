@@ -42,5 +42,11 @@ public class ArchivoConfiguration : IEntityTypeConfiguration<Archivo>
         builder.Property(a => a.EnProcesamiento)
             .IsRequired()
             .HasDefaultValue(false);
+
+        builder.Property(a => a.ProcesamientoInicio)
+            .IsRequired(false);
+
+        builder.Property(a => a.ProcesamientoFin)
+            .IsRequired(false);
     }
 }

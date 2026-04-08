@@ -1,5 +1,6 @@
 import logging
 import os
+from datetime import datetime, timezone
 
 import httpx
 
@@ -98,6 +99,7 @@ async def process_file(file: TrainFileRequest) -> None:
     logger.info("Processing file: %s (%s)", file.nombre, file.id)
 
     enriched_context = "conocimiento general"
+    start_time = datetime.now(timezone.utc)
 
     try:
         # Step 1: Extract text
@@ -109,7 +111,7 @@ async def process_file(file: TrainFileRequest) -> None:
                 file.nombre,
                 len(text.strip()) if text else 0,
             )
-            await _callback_backend(file.id, enriched_context)
+            await _callback_backend(file.id, enriched_context, start_time)
             return
 
         # Step 2: Enrich context with LLM (skip for .md/.txt — already processed text)
@@ -132,7 +134,7 @@ async def process_file(file: TrainFileRequest) -> None:
 
         if not chunks:
             logger.warning("No chunks generated for file '%s'", file.nombre)
-            await _callback_backend(file.id, enriched_context)
+            await _callback_backend(file.id, enriched_context, start_time)
             return
 
         # Step 4: Generate embeddings for each chunk
@@ -163,18 +165,29 @@ async def process_file(file: TrainFileRequest) -> None:
         logger.exception("Error processing file '%s' (%s)", file.nombre, file.id)
 
     # Step 6: Always attempt callback, even on error
-    await _callback_backend(file.id, enriched_context)
+    await _callback_backend(file.id, enriched_context, start_time)
 
 
-async def _callback_backend(archivo_id: str, contexto: str) -> None:
+async def _callback_backend(archivo_id: str, contexto: str, start_time: datetime) -> None:
     """Notify the backend that file processing is complete."""
+    end_time = datetime.now(timezone.utc)
     url = f"{settings.BACKEND_URL}/api/archivos/{archivo_id}/procesado"
     logger.info("Sending callback to backend: PUT %s", url)
 
+    payload = {
+        "contexto": contexto,
+        "procesamientoInicio": start_time.isoformat(),
+        "procesamientoFin": end_time.isoformat(),
+    }
+
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
-            resp = await client.put(url, json={"contexto": contexto})
+            resp = await client.put(url, json=payload)
             resp.raise_for_status()
-            logger.info("Backend callback successful for archivo %s (status %d)", archivo_id, resp.status_code)
+            elapsed = (end_time - start_time).total_seconds()
+            logger.info(
+                "Backend callback successful for archivo %s (status %d, %.1fs elapsed)",
+                archivo_id, resp.status_code, elapsed,
+            )
     except Exception:
         logger.exception("Failed to send callback to backend for archivo %s", archivo_id)

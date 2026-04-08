@@ -839,6 +839,8 @@ select.form-control option {
   justify-content: center;
   gap: var(--spacing-4);
   color: var(--color-text-secondary);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .dropzone:hover, .dropzone--active {

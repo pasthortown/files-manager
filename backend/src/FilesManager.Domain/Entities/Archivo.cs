@@ -39,4 +39,14 @@ public class Archivo : Entity
     /// Indicates whether the file is currently being processed by the trainer.
     /// </summary>
     public bool EnProcesamiento { get; set; } = false;
+
+    /// <summary>
+    /// Timestamp when the processing started.
+    /// </summary>
+    public DateTime? ProcesamientoInicio { get; set; }
+
+    /// <summary>
+    /// Timestamp when the processing finished.
+    /// </summary>
+    public DateTime? ProcesamientoFin { get; set; }
 }

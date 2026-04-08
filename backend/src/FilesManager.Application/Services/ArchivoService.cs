@@ -244,10 +244,12 @@ public class ArchivoService : IArchivoService
             return ApiResponse<bool>.FailureResponse("No se encontraron archivos con los IDs proporcionados.");
         }
 
-        // Mark files as processing
+        // Mark files as processing with start timestamp
         foreach (var archivo in archivos)
         {
             archivo.EnProcesamiento = true;
+            archivo.ProcesamientoInicio = DateTime.UtcNow;
+            archivo.ProcesamientoFin = null;
             await _archivoRepository.UpdateAsync(archivo);
         }
 
@@ -289,6 +291,8 @@ public class ArchivoService : IArchivoService
         archivo.Procesado = true;
         archivo.EnProcesamiento = false;
         archivo.Contexto = request.Contexto;
+        archivo.ProcesamientoInicio = request.ProcesamientoInicio ?? archivo.ProcesamientoInicio;
+        archivo.ProcesamientoFin = request.ProcesamientoFin ?? DateTime.UtcNow;
 
         await _archivoRepository.UpdateAsync(archivo);
 
