@@ -9,6 +9,8 @@ export interface Archivo {
   procesado: boolean;
   contexto: string | null;
   enProcesamiento: boolean;
+  procesamientoInicio: string | null;
+  procesamientoFin: string | null;
 }
 
 export interface CreateArchivoRequest {
