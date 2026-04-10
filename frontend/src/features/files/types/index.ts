@@ -11,6 +11,7 @@ export interface Archivo {
   enProcesamiento: boolean;
   procesamientoInicio: string | null;
   procesamientoFin: string | null;
+  chromaDbIds: string | null;
 }
 
 export interface CreateArchivoRequest {

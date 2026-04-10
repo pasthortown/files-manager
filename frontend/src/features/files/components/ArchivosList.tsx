@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useArchivos } from '../hooks';
 import ArchivoModal from './ArchivoModal';
 import DeleteConfirmModal from './DeleteConfirmModal';
+import DeleteMemoriaModal from './DeleteMemoriaModal';
 import AprenderConfirmModal from './AprenderConfirmModal';
 import type { Archivo, CreateArchivoRequest, UpdateArchivoRequest } from '../types';
 
@@ -20,14 +21,16 @@ const getFileExtension = (path: string): string => {
 };
 
 const ArchivosList: React.FC = () => {
-  const { archivos, loading, error, create, update, remove, download, aprender } = useArchivos();
+  const { archivos, loading, error, create, update, remove, download, aprender, eliminarMemoria } = useArchivos();
   const [activeTab, setActiveTab] = useState<TabKey>('gestion');
   const [searchTerm, setSearchTerm] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [memoriaModalOpen, setMemoriaModalOpen] = useState(false);
   const [aprenderModalOpen, setAprenderModalOpen] = useState(false);
   const [selectedArchivo, setSelectedArchivo] = useState<Archivo | null>(null);
   const [archivoToDelete, setArchivoToDelete] = useState<Archivo | null>(null);
+  const [archivoToDeleteMemoria, setArchivoToDeleteMemoria] = useState<Archivo | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 20;
@@ -35,10 +38,6 @@ const ArchivosList: React.FC = () => {
   // Filtrar archivos segun tab y busqueda (sobre TODOS los archivos)
   const filteredArchivos = useMemo(() => {
     let list = archivos;
-
-    if (activeTab === 'memoria') {
-      list = list.filter((a) => !a.procesado);
-    }
 
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
@@ -107,6 +106,17 @@ const ArchivosList: React.FC = () => {
     }
   };
 
+  const handleDeleteMemoriaClick = (archivo: Archivo) => {
+    setArchivoToDeleteMemoria(archivo);
+    setMemoriaModalOpen(true);
+  };
+
+  const handleConfirmDeleteMemoria = async () => {
+    if (archivoToDeleteMemoria) {
+      await eliminarMemoria(archivoToDeleteMemoria.id);
+    }
+  };
+
   const handleDownload = async (archivo: Archivo) => {
     const ext = archivo.path.split('.').pop() || '';
     const fileName = ext ? `${archivo.nombre}.${ext}` : archivo.nombre;
@@ -124,7 +134,7 @@ const ArchivosList: React.FC = () => {
   };
 
   const toggleSelectAll = () => {
-    const selectable = filteredArchivos.filter((a) => !a.enProcesamiento);
+    const selectable = filteredArchivos.filter((a) => !a.enProcesamiento && !a.procesado);
     if (selectedIds.size === selectable.length && selectable.length > 0) {
       setSelectedIds(new Set());
     } else {
@@ -200,7 +210,7 @@ const ArchivosList: React.FC = () => {
                 <th style={{ width: 44, textAlign: 'center' }}>
                   <input
                     type="checkbox"
-                    checked={selectedIds.size === filteredArchivos.filter((a) => !a.enProcesamiento).length && filteredArchivos.filter((a) => !a.enProcesamiento).length > 0}
+                    checked={selectedIds.size === filteredArchivos.filter((a) => !a.enProcesamiento && !a.procesado).length && filteredArchivos.filter((a) => !a.enProcesamiento && !a.procesado).length > 0}
                     onChange={toggleSelectAll}
                     style={{ accentColor: 'var(--color-primary)', width: 16, height: 16, cursor: 'pointer' }}
                   />
@@ -211,7 +221,7 @@ const ArchivosList: React.FC = () => {
               <th>Contexto</th>
               <th>Descripcion</th>
               <th>Fecha de Creacion</th>
-              {!isMemoria && <th style={{ textAlign: 'center' }}>Acciones</th>}
+              <th style={{ textAlign: 'center' }}>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -221,14 +231,14 @@ const ArchivosList: React.FC = () => {
                   <td style={{ textAlign: 'center' }}>
                     {archivo.enProcesamiento ? (
                       <span className="spinner" title="Procesando..." />
-                    ) : (
+                    ) : !archivo.procesado ? (
                       <input
                         type="checkbox"
                         checked={selectedIds.has(archivo.id)}
                         onChange={() => toggleSelect(archivo.id)}
                         style={{ accentColor: 'var(--color-primary)', width: 16, height: 16, cursor: 'pointer' }}
                       />
-                    )}
+                    ) : null}
                   </td>
                 )}
                 <td>
@@ -261,27 +271,44 @@ const ArchivosList: React.FC = () => {
                   </span>
                 </td>
                 <td>{formatDate(archivo.createdAt)}</td>
-                {!isMemoria && (
-                  <td>
-                    <div className="table__actions" style={{ justifyContent: 'center' }}>
-                      <button className="btn btn--icon btn--sm btn--ghost" title="Descargar" onClick={() => handleDownload(archivo)}>
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                        </svg>
-                      </button>
-                      <button className="btn btn--icon btn--sm btn--ghost" title="Editar" onClick={() => handleEdit(archivo)}>
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button className="btn btn--icon btn--sm btn--ghost" title="Eliminar" onClick={() => handleDeleteClick(archivo)} style={{ color: 'var(--color-error)' }}>
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </td>
-                )}
+                <td>
+                  <div className="table__actions" style={{ justifyContent: 'center' }}>
+                    {!isMemoria ? (
+                      <>
+                        <button className="btn btn--icon btn--sm btn--ghost" title="Descargar" onClick={() => handleDownload(archivo)}>
+                          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                          </svg>
+                        </button>
+                        <button className="btn btn--icon btn--sm btn--ghost" title="Editar" onClick={() => handleEdit(archivo)}>
+                          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button className="btn btn--icon btn--sm btn--ghost" title="Eliminar" onClick={() => handleDeleteClick(archivo)} style={{ color: 'var(--color-error)' }}>
+                          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </>
+                    ) : (
+                      archivo.procesado && archivo.chromaDbIds ? (
+                        <button
+                          className="btn btn--icon btn--sm btn--ghost"
+                          title="Eliminar memoria"
+                          onClick={() => handleDeleteMemoriaClick(archivo)}
+                          style={{ color: '#F59E0B' }}
+                        >
+                          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                          </svg>
+                        </button>
+                      ) : (
+                        <span className="text-xs text-secondary">—</span>
+                      )
+                    )}
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -436,6 +463,12 @@ const ArchivosList: React.FC = () => {
         onClose={() => setAprenderModalOpen(false)}
         onConfirm={handleConfirmAprender}
         count={selectedIds.size}
+      />
+      <DeleteMemoriaModal
+        isOpen={memoriaModalOpen}
+        onClose={() => setMemoriaModalOpen(false)}
+        onConfirm={handleConfirmDeleteMemoria}
+        fileName={archivoToDeleteMemoria?.nombre || ''}
       />
     </div>
   );

@@ -101,6 +101,7 @@ async def process_file(file: TrainFileRequest) -> None:
 
     enriched_context = "conocimiento general"
     start_time = datetime.now(timezone.utc)
+    stored_ids: list[str] = []
 
     try:
         file_ext = os.path.splitext(file.path)[1].lower()
@@ -157,7 +158,7 @@ async def process_file(file: TrainFileRequest) -> None:
         if not context_keywords:
             context_keywords = ["conocimiento general"]
 
-        chroma_client.store_chunks(
+        stored_ids = chroma_client.store_chunks(
             archivo_id=file.id,
             nombre=file.nombre,
             chunks=chunks,
@@ -171,20 +172,29 @@ async def process_file(file: TrainFileRequest) -> None:
         logger.exception("Error processing file '%s' (%s)", file.nombre, file.id)
 
     # Step 6: Always attempt callback, even on error
-    await _callback_backend(file.id, enriched_context, start_time)
+    chroma_db_ids = ",".join(stored_ids) if stored_ids else None
+    await _callback_backend(file.id, enriched_context, start_time, chroma_db_ids)
 
 
-async def _callback_backend(archivo_id: str, contexto: str, start_time: datetime) -> None:
+async def _callback_backend(
+    archivo_id: str,
+    contexto: str,
+    start_time: datetime,
+    chroma_db_ids: str | None = None,
+) -> None:
     """Notify the backend that file processing is complete."""
     end_time = datetime.now(timezone.utc)
     url = f"{settings.BACKEND_URL}/api/archivos/{archivo_id}/procesado"
     logger.info("Sending callback to backend: PUT %s", url)
 
-    payload = {
+    payload: dict = {
         "contexto": contexto,
         "procesamientoInicio": start_time.isoformat(),
         "procesamientoFin": end_time.isoformat(),
     }
+
+    if chroma_db_ids:
+        payload["chromaDbIds"] = chroma_db_ids
 
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:

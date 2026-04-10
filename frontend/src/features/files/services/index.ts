@@ -25,6 +25,10 @@ export const aprenderArchivos = async (archivoIds: string[]): Promise<void> => {
   await api.post('/archivos/aprender', { archivoIds });
 };
 
+export const eliminarMemoria = async (id: string): Promise<void> => {
+  await api.delete(`/archivos/${id}/memoria`);
+};
+
 export const downloadArchivo = async (id: string, fileName: string): Promise<void> => {
   const response = await api.get(`/archivos/${id}/download`, {
     responseType: 'blob',

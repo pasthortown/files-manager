@@ -12,6 +12,7 @@ interface UseArchivosReturn {
   remove: (id: string) => Promise<void>;
   download: (id: string, fileName: string) => Promise<void>;
   aprender: (ids: string[]) => Promise<void>;
+  eliminarMemoria: (id: string) => Promise<void>;
 }
 
 export const useArchivos = (): UseArchivosReturn => {
@@ -85,5 +86,10 @@ export const useArchivos = (): UseArchivosReturn => {
     await fetchArchivos();
   }, [fetchArchivos]);
 
-  return { archivos, loading, error, refresh: fetchArchivos, create, update, remove, download, aprender };
+  const eliminarMemoria = useCallback(async (id: string) => {
+    await archivosService.eliminarMemoria(id);
+    await fetchArchivos();
+  }, [fetchArchivos]);
+
+  return { archivos, loading, error, refresh: fetchArchivos, create, update, remove, download, aprender, eliminarMemoria };
 };

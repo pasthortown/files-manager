@@ -299,4 +299,35 @@ public class ArchivosController : ControllerBase
 
         return Ok(result);
     }
+
+    /// <summary>
+    /// Deletes the learned memory (ChromaDB data) for a file without removing the file itself.
+    /// </summary>
+    /// <remarks>
+    /// Removes all ChromaDB chunk IDs associated with the file and resets it to unprocessed state.
+    /// The physical file and database record are preserved.
+    /// </remarks>
+    /// <param name="id">The unique identifier of the file.</param>
+    /// <returns>An API response indicating success or failure.</returns>
+    /// <response code="200">Memory deleted successfully.</response>
+    /// <response code="400">The file has no memory data to delete.</response>
+    /// <response code="404">File with the specified ID was not found.</response>
+    /// <response code="500">An internal error occurred.</response>
+    [HttpDelete("{id:guid}/memoria")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> EliminarMemoria(Guid id)
+    {
+        _logger.LogInformation("Deleting memory for archivo {Id}.", id);
+        var result = await _archivoService.EliminarMemoriaAsync(id);
+
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
 }

@@ -12,4 +12,10 @@ public interface ITrainerService
     /// </summary>
     /// <param name="files">The list of files to process.</param>
     Task SendToTrainerAsync(IEnumerable<TrainerFileRequest> files);
+
+    /// <summary>
+    /// Deletes chunk IDs from ChromaDB via the trainer service.
+    /// </summary>
+    /// <param name="ids">The ChromaDB chunk IDs to delete.</param>
+    Task DeleteMemoryAsync(IEnumerable<string> ids);
 }

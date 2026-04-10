@@ -44,4 +44,24 @@ public class TrainerService : ITrainerService
             _logger.LogError(ex, "Failed to send files to trainer service.");
         }
     }
+
+    /// <inheritdoc />
+    public async Task DeleteMemoryAsync(IEnumerable<string> ids)
+    {
+        var payload = new { ids };
+        var json = JsonSerializer.Serialize(payload, JsonOptions);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        try
+        {
+            var response = await _httpClient.PostAsync("/delete-memory", content);
+            response.EnsureSuccessStatusCode();
+            _logger.LogInformation("Trainer delete-memory response: {StatusCode}", response.StatusCode);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete memory from trainer service.");
+            throw;
+        }
+    }
 }

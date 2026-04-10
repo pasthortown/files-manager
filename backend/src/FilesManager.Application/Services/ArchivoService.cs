@@ -179,6 +179,21 @@ public class ArchivoService : IArchivoService
                 $"No se encontro el archivo con ID '{id}'.");
         }
 
+        // Delete ChromaDB data if present
+        if (!string.IsNullOrWhiteSpace(archivo.ChromaDbIds))
+        {
+            var chromaIds = archivo.ChromaDbIds.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            try
+            {
+                await _trainerService.DeleteMemoryAsync(chromaIds);
+                _logger.LogInformation("ChromaDB data deleted for archivo {Id}", id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to delete ChromaDB data for archivo {Id}, proceeding with file deletion.", id);
+            }
+        }
+
         // Delete the file from disk
         if (File.Exists(archivo.Path))
         {
@@ -291,6 +306,7 @@ public class ArchivoService : IArchivoService
         archivo.Procesado = true;
         archivo.EnProcesamiento = false;
         archivo.Contexto = request.Contexto;
+        archivo.ChromaDbIds = request.ChromaDbIds;
         archivo.ProcesamientoInicio = request.ProcesamientoInicio ?? archivo.ProcesamientoInicio;
         archivo.ProcesamientoFin = request.ProcesamientoFin ?? DateTime.UtcNow;
 
@@ -298,5 +314,34 @@ public class ArchivoService : IArchivoService
 
         _logger.LogInformation("Archivo {Id} marked as processed with context: {Contexto}", id, request.Contexto);
         return ApiResponse<bool>.SuccessResponse(true, "Archivo procesado exitosamente.");
+    }
+
+    /// <inheritdoc />
+    public async Task<ApiResponse<bool>> EliminarMemoriaAsync(Guid id)
+    {
+        var archivo = await _archivoRepository.GetByIdAsync(id);
+
+        if (archivo is null)
+        {
+            return ApiResponse<bool>.FailureResponse($"No se encontro el archivo con ID '{id}'.");
+        }
+
+        if (string.IsNullOrWhiteSpace(archivo.ChromaDbIds))
+        {
+            return ApiResponse<bool>.FailureResponse("El archivo no tiene datos en memoria para eliminar.");
+        }
+
+        var chromaIds = archivo.ChromaDbIds.Split(',', StringSplitOptions.RemoveEmptyEntries);
+        await _trainerService.DeleteMemoryAsync(chromaIds);
+
+        archivo.ChromaDbIds = null;
+        archivo.Procesado = false;
+        archivo.ProcesamientoInicio = null;
+        archivo.ProcesamientoFin = null;
+
+        await _archivoRepository.UpdateAsync(archivo);
+
+        _logger.LogInformation("Memory deleted for archivo {Id} ({Count} ChromaDB IDs removed)", id, chromaIds.Length);
+        return ApiResponse<bool>.SuccessResponse(true, "Memoria eliminada exitosamente.");
     }
 }

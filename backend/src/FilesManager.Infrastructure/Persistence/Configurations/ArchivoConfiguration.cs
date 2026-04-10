@@ -48,5 +48,8 @@ public class ArchivoConfiguration : IEntityTypeConfiguration<Archivo>
 
         builder.Property(a => a.ProcesamientoFin)
             .IsRequired(false);
+
+        builder.Property(a => a.ChromaDbIds)
+            .HasColumnType("nvarchar(max)");
     }
 }

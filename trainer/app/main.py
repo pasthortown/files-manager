@@ -4,8 +4,9 @@ from contextlib import asynccontextmanager
 from fastapi import BackgroundTasks, FastAPI
 
 from app.config import settings
-from app.models import TrainRequest
+from app.models import DeleteMemoryRequest, TrainRequest
 from app.services import ollama_client, trainer
+from app.services import chroma_client
 
 logging.basicConfig(
     level=logging.INFO,
@@ -65,6 +66,17 @@ async def train(request: TrainRequest, background_tasks: BackgroundTasks):
     return {
         "status": "accepted",
         "message": f"{len(request.files)} file(s) queued for processing",
+    }
+
+
+@app.post("/delete-memory")
+async def delete_memory(request: DeleteMemoryRequest):
+    """Delete specific chunk IDs from all ChromaDB collections."""
+    logger.info("Received delete-memory request for %d ID(s)", len(request.ids))
+    chroma_client.delete_by_ids(request.ids)
+    return {
+        "status": "ok",
+        "message": f"{len(request.ids)} ID(s) deleted from ChromaDB",
     }
 
 

@@ -65,4 +65,11 @@ public interface IArchivoService
     /// <param name="request">The callback data with enriched context.</param>
     /// <returns>An API response indicating success or failure.</returns>
     Task<ApiResponse<bool>> ProcesadoCallbackAsync(Guid id, ProcesadoCallbackRequest request);
+
+    /// <summary>
+    /// Deletes the learned memory (ChromaDB data) for a file without removing the file itself.
+    /// </summary>
+    /// <param name="id">The unique identifier of the file.</param>
+    /// <returns>An API response indicating success or failure.</returns>
+    Task<ApiResponse<bool>> EliminarMemoriaAsync(Guid id);
 }

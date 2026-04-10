@@ -53,14 +53,15 @@ def store_chunks(
     chunks: list[str],
     embeddings: list[list[float]],
     contexts: list[str],
-) -> None:
+) -> list[str]:
     """Store document chunks with embeddings into ChromaDB collections.
 
     Creates one collection per context keyword and upserts all chunks into each.
+    Returns the list of chunk IDs that were stored.
     """
     if not chunks:
         logger.warning("No chunks to store for file '%s'", nombre)
-        return
+        return []
 
     client = _get_client()
 
@@ -109,3 +110,29 @@ def store_chunks(
                 nombre,
             )
             raise
+
+    return ids
+
+
+def delete_by_ids(ids: list[str]) -> None:
+    """Delete chunks by their IDs from all ChromaDB collections."""
+    if not ids:
+        logger.warning("No IDs provided for deletion")
+        return
+
+    client = _get_client()
+    collections = client.list_collections()
+
+    for collection in collections:
+        try:
+            collection.delete(ids=ids)
+            logger.info(
+                "Deleted %d IDs from collection '%s'",
+                len(ids),
+                collection.name,
+            )
+        except Exception:
+            logger.exception(
+                "Failed to delete IDs from collection '%s'",
+                collection.name,
+            )

@@ -64,4 +64,9 @@ public class ArchivoResponse
     /// Timestamp when the processing finished.
     /// </summary>
     public DateTime? ProcesamientoFin { get; set; }
+
+    /// <summary>
+    /// Comma-separated ChromaDB chunk IDs stored during processing.
+    /// </summary>
+    public string? ChromaDbIds { get; set; }
 }

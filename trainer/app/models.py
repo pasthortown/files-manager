@@ -10,3 +10,7 @@ class TrainFileRequest(BaseModel):
 
 class TrainRequest(BaseModel):
     files: list[TrainFileRequest]
+
+
+class DeleteMemoryRequest(BaseModel):
+    ids: list[str]

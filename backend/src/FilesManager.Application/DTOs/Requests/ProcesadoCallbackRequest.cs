@@ -19,4 +19,9 @@ public class ProcesadoCallbackRequest
     /// Timestamp when the processing finished (ISO 8601 from trainer).
     /// </summary>
     public DateTime? ProcesamientoFin { get; set; }
+
+    /// <summary>
+    /// Comma-separated ChromaDB chunk IDs stored during processing.
+    /// </summary>
+    public string? ChromaDbIds { get; set; }
 }
