@@ -61,14 +61,10 @@ const AprenderConfirmModal: React.FC<AprenderConfirmModalProps> = ({
             </div>
             <div>
               <p className="text-sm" style={{ margin: 0, color: 'var(--color-text-primary)' }}>
-                El conocimiento adquirido por el modelo no puede ser revertido. Sin embargo,
-                siempre es posible agregar actualizaciones y nuevo conocimiento.
+                Se procesaran los archivos seleccionados para incorporar su contenido a la memoria del sistema. Este proceso puede tomar algunos minutos dependiendo del tamano de los archivos.
               </p>
               <p className="text-sm font-semibold" style={{ margin: 'var(--spacing-3) 0 0', color: 'var(--color-text-primary)' }}>
-                ¿Desea continuar con el proceso de aprendizaje?
-              </p>
-              <p className="text-xs text-secondary" style={{ margin: 'var(--spacing-3) 0 0' }}>
-                {count} archivo{count > 1 ? 's' : ''} seleccionado{count > 1 ? 's' : ''} para procesar.
+                ¿Desea iniciar el aprendizaje de {count} archivo{count > 1 ? 's' : ''}?
               </p>
             </div>
           </div>
